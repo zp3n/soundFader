@@ -1,0 +1,34 @@
+name: 'publish'
+on:
+  push:
+    branches:
+      - main # mainブランチにプッシュされたら実行
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    runs-on: macos-latest # macOS環境のランナーを使用
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-size: lts/*
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies
+        run: npm install # pnpm や yarn を使う場合は適宜変更してください
+
+      - name: build and release
+        uses: tauri-apps/tauri-action@v0 # または v1（バージョンに合わせて選択）
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__ # tauri.conf.jsonのバージョンを自動取得してタグを作成
+          releaseName: 'App v__VERSION__'
+          releaseDraft: true
+          prerelease: false
