@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri App</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h3>自動プレイヤー</h3>
+      <!-- ① ファイル選択ボタン（MP3などの音声ファイルのみを受け付ける） -->
+      <input type="file" id="fileInput" accept="audio/mp3, audio/*">
+      <p id="fileNameDisplay" style="font-weight: bold; font-size: 1.1em; color: #fff;"></p>
+      <!-- ② 音声プレーヤー（初期状態はファイル未選択のため再生不可） -->
+      <audio id="audioPlayer" loop controls style="display: block;margin: 0 auto;"></audio><br>
+      <input type="file" id="fileInput1" accept="audio/mp3, audio/*">
+      <p id="fileNameDisplay1" style="font-weight: bold; font-size: 1.1em; color: #fff;"></p>
+      <audio id="audioPlayer1" controls style="display: block;margin: 0 auto;"></audio><br>
+
+      <button id="pf1" disabled onclick="playFile1()">ファイル１を再生</button><br>
+      <button id="pf2" disabled>ファイル２をキュー</button><br>
+      <input type="number" id="marginTime" value="0">
+      <button id="stopAll" onclick="stopAudio()">すべて止める</button>
+
+      <script>
+        let isQueue = false;
+        var sleepTime;
+        const sleep = setInterval(() => {}, sleepTime);
+        // const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
+        const marginTime = document.getElementById('marginTime');
+        const fileInput = document.getElementById('fileInput');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const playButton = document.getElementById('pf1');
+
+        const fileInput1 = document.getElementById('fileInput1');
+        const audioPlayer1 = document.getElementById('audioPlayer1');
+        const fileNameDisplay1 = document.getElementById('fileNameDisplay1');
+        const playButton1 = document.getElementById('pf2');
+
+        // ファイルが選択されたときの処理
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0]; // 選択された1つ目のファイルを取得
+            if (file) {
+                // ローカルファイルの暫定的なURL（Blob URL）を生成
+                const fileURL = URL.createObjectURL(file);
+                // audioタグの再生源（src）に設定
+                audioPlayer.src = fileURL;
+                fileNameDisplay.textContent = file.name;
+                playButton.disabled = false;
+                // 自動で再生を開始（ブラウザの仕様により、ユーザー操作後のみ可能）
+                //audioPlayer.play();
+                fileInput.remove();
+            }
+        });
+        fileInput1.addEventListener('change', function(event) {
+            const file1 = event.target.files[0];
+            if (file1) {
+                const fileURL1 = URL.createObjectURL(file1);
+                audioPlayer1.src = fileURL1;
+                fileNameDisplay1.textContent = file1.name;
+                playButton1.disabled = false;
+                fileInput1.remove();
+            }
+        });
+        function playFile1(){
+          audioPlayer.play();
+          sleepTime = marginTime.value;
+          startTimerMonitor();
+          // await waitClick();
+          // audioPlayer1.play();
+          // audioPlayer.pause();
+        }
+        function waitClick() {
+          return new Promise((resolve) => {
+            playButton1.addEventListener('click', () => {
+              resolve(); // クリックされたらPromiseを完了（resolve）させる
+            }, { once: true }); // 一度クリックされたらリスナーを自動解除
+          });
+        }
+
+        playButton1.addEventListener('click', () => {
+          isQueue = true;
+        });
+        // メインの待機・監視処理
+        function startTimerMonitor() {
+          // 2秒（2000ミリ秒）ごとに実行されるタイマー
+          const intervalId = setInterval(() => {
+            if (isQueue) {
+            // 【入力があった場合】
+              //clearInterval(intervalId); // タイマーを止める
+              audioPlayer1.play();
+              audioPlayer1.volume = 0.8;
+              let timerid = setInterval( ()=>{
+              // ボリュームが0になったら終了
+              if( (audioPlayer.volume - 0.1) <= 0 ){
+                audioPlayer.volume = 0;
+                audioPlayer.pause();
+                clearInterval(timerid);  //タイマー解除
+              }else{
+                  audioPlayer.volume -= 0.1;
+                }
+              }, 50);                // 次の処理を実行
+            } else {
+            }
+          }, 1920*4);
+        }
+        function stopAudio(){
+          audioPlayer.pause();
+          audioPlayer.currentTime = 0;
+          audioPlayer1.pause();
+          audioPlayer1.currentTime = 0;
+        }
+      </script>
+    </main>
+  </body>
+</html>
